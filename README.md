@@ -1,2 +1,2 @@
 # Wikipedia-Generation
-A Wikipedia Article Generator made using LSTM cells on a TensorFlow RNN.
+A Wikipedia Article Generator made using a TensorFlow LSTM cell.
