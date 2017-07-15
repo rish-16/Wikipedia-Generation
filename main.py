@@ -3,7 +3,7 @@ import pandas as pd
 import tensorflow as tf
 import datetime
 
-text = open('wiki.test.raw').read()
+text = open('wiki.test.tokens').read()
 print('Text length in number of characters:', len(text))
 
 print('Head of text:', text[:1000])
@@ -49,7 +49,7 @@ y = np.zeros((len(sections), char_size))
 
 for i, section in enumerate(sections):
 	for j, char in enumerate(section):
-		X[i, j], char2id[char] =1
+		X[i, j, char2id[char]] = 1
 	y[i, char2id[next_chars[i]]] = 1
 
 print(y)
@@ -79,7 +79,7 @@ with graph.as_default():
 	global_step = tf.Variable(0)
 
 	data = tf.placeholder(tf.float32, [batch_size, len_per_section, char_size])
-	labels = f.placeholder(tf.float32, [batch_size, char_size])
+	labels = tf.placeholder(tf.float32, [batch_size, char_size])
 
 	# Input gate - input and output weights + biases
 	w_ii = tf.Variable(tf.truncated_normal([char_size, n_hidden], -0.1, 0.1))
@@ -117,17 +117,15 @@ with graph.as_default():
 
 	for i in range(len_per_section):
 		output, state = lstm_cell(data[:, i, :], output, state)
-		if (i == 0):
-			outputs_all_i = output
-			labels_all_i = data[:, i+1, :]
-
-		elif (i != len_per_section - 1):
-			outputs_all_i = tf.concat(0, [outputs_all_i, output])
-			labels_all_i = tf.concat(0, [labels_all_i, data[:, i+1, :]])
-
+		if i == 0:
+		    outputs_all_i = output
+		    labels_all_i = data[:, i+1, :]
+		elif i != len_per_section - 1:
+		    outputs_all_i = tf.concat(0, [outputs_all_i, output])
+		    labels_all_i = tf.concat(0, [labels_all_i, data[:, i+1, :]])
 		else:
-			outputs_all_i = tf.concat(0, [outputs_all_i, output])
-			labels_all_i = tf.concat(0, [labels_all_i, labels])
+		    outputs_all_i = tf.concat(0, [outputs_all_i, output])
+		    labels_all_i = tf.concat(0, [labels_all_i, labels])
 
 	# Classifier
 	w = tf.Variable(tf.truncated_normal([n_hidden, char_size], -0.1, 1.0))
